@@ -33,7 +33,9 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
 
     Route::get('EventCount', [EventController::class, 'EventCount']);
 
+    Route::post('activate/{id}', [adminController::class, 'activate']);
 
+    Route::post('deactivate/{id}', [adminController::class, 'deactivate']);
 
     Route::post('approveEventManager/{$id}', [AuthController::class, 'approveEventManager']);
     Route::delete('rejectEventManager/{$id}', [AuthController::class, 'rejectEventManager']);
@@ -42,7 +44,7 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
 
 Route::group(['middleware' => ['auth:sanctum', 'role:eventManager']], function () {
     Route::get('showUser', [AuthController::class, 'showUser']);
-    
+
     Route::get('eventsOfUser', [EventManagerController::class, 'eventsOfUser']);
 
 });

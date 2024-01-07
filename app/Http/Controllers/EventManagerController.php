@@ -69,4 +69,25 @@ class eventManagerController extends Controller
     }
     }
 
+    public function activate($id) 
+    {
+        $EventManager = User::role('eventManager')->find($id);
+        if($EventManager)
+    {
+            $EventManager->status = 1;
+            $EventManager->save();
+            return response()->json("activate");
+    }
+    }
+    public function deactivate($id) 
+    {
+        $EventManager = User::role('eventManager')->find($id);
+        if($EventManager)
+    {
+            $EventManager->status = 0;
+            $EventManager->save();
+            return response()->json ("deactivate");
+    }
+    }
+
 }
