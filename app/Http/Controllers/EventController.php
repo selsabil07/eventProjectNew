@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class EventController extends Controller
 {
@@ -45,9 +47,20 @@ class EventController extends Controller
             'endingDate' => $fields['endingDate'],
            //  'EventManager_id' => $fields['eventManagerId'], // Set the event manager ID
         ]);
-    
+
+        $admin = User::role('admin')->get();
+        $event_manager = auth()->user()->first_name;
+        Notification::send($admin , new NewNotification($event->id , $event->eventTitle , $event_manager));
+
         return response()->json($event, 200);
     }
+
+    public function notifCount()
+    {
+        $notifs = auth()->check() ? auth()->user()->unreadNotifications->count() : 0;
+        return response()->json($notifs);
+    }
+    
     
 
 

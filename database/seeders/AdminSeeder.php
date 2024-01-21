@@ -21,6 +21,7 @@ class AdminSeeder extends Seeder
             'organization' => 'adminOrg',
             'phone' => '0505050505',
             'password' => bcrypt('12345'),
+            'approved' => '1'
         ]);
         $user->assignRole('admin');
     }

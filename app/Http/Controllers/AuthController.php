@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Notifications\NewNotification;
+use Illuminate\Support\Facades\Notification;
 
 class AuthController extends Controller
 {
@@ -39,9 +41,24 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $token
         ];
+        
+        $admin = User::role('admin')->get();
+        $notification = new NewNotification($user->first_name, $user->last_name);
 
-        return response()->json($response);
+        Notification::send($admin, $notification);
+    
+        return response()->json($response,200);
    
+    }
+    public function notifCount()
+    {
+        $notifs = auth()->check() ? auth()->user()->unreadNotifications->count() : 0;
+        return response()->json($notifs);
+    }
+    public function notifs()
+    {
+        $notifs = auth()->check() ? auth()->user()->unreadNotifications->all():0;
+        return response()->json($notifs);
     }
 
 
@@ -84,6 +101,10 @@ class AuthController extends Controller
         $user = Auth::user(); 
         return response()->json($user); 
     }
+    // public function showAdmin(){
+    //     $admin = Auth::user(); 
+    //     return response()->json($admin); 
+    // }
 
     public function login(Request $request) {
     $fields = $request->validate([
@@ -110,5 +131,11 @@ class AuthController extends Controller
 
     return response()->json($response, 201);
 }
+    public function logout(Request $request) {
+        auth()->user()->tokens()->delete();
+
+        return response()->json(200);
+    }
+
 
 }

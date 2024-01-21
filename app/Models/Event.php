@@ -13,4 +13,17 @@ class Event extends Model
     {
         return $this->belongsTo(User::class);
     }
+    protected $fillable = [
+        'EventManager_id',
+        'eventTitle' ,
+        'country',
+        'sector',
+        'photo',
+        'tags',
+        'summary',
+        'description',
+        'approved',
+        'startingDate',
+        'endingDate',
+    ];
 }

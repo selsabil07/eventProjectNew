@@ -4,7 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EventController;
-use App\Http\Controllers\eventManagerController;
+use App\Http\Controllers\EventManagerController;
+use App\Http\Controllers\adminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,39 +20,41 @@ use App\Http\Controllers\eventManagerController;
 
 Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
 
+    // Route::get('adminInfo/{id}', [adminController::class, 'adminInfo']);
     Route::get('approvedEventManagers', [EventManagerController::class, 'index']);
-
     Route::get('requestEventManagers', [EventManagerController::class, 'requests']);
-
-    Route::get('approvedEventManagersCount', [EventManagerController::class, 'approvedEventManagers']);
-
+    Route::get('approvedEventManagersCount', [EventManagerController::class, 'approvedEventManagersCount']);
     Route::get('requestCount', [EventManagerController::class, 'requestCount']);
-
     Route::get('events', [EventController::class, 'index']);
-
-    Route::get('search', [EventController::class, 'seach']);
-
+    Route::get('search/{$eventTitle}', [EventController::class, 'search']);
     Route::get('EventCount', [EventController::class, 'EventCount']);
-
     Route::post('activate/{id}', [adminController::class, 'activate']);
-
     Route::post('deactivate/{id}', [adminController::class, 'deactivate']);
-
-    Route::post('approveEventManager/{$id}', [AuthController::class, 'approveEventManager']);
+    Route::post('update', [adminController::class, 'update']);
+    Route::post('approveEventManager/{id}', [EventManagerController::class, 'approveEventManager']);
     Route::delete('rejectEventManager/{$id}', [AuthController::class, 'rejectEventManager']);
+    Route::get('showUser', [AuthController::class, 'showUser']);
+    Route::get('eventsOfUser/{id}', [EventManagerController::class, 'eventsOfUser']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::get('notifCount', [AuthController::class, 'notifCount']);
+    Route::get('notifs', [AuthController::class, 'notifs']);
+
 
 });
 
 Route::group(['middleware' => ['auth:sanctum', 'role:eventManager']], function () {
     Route::get('showUser', [AuthController::class, 'showUser']);
-
     Route::get('eventsOfUser', [EventManagerController::class, 'eventsOfUser']);
+    Route::post('eventCreate', [EventController::class, 'create']);
+    Route::post('eventManager/update', [EventManagerController::class, 'update']);
+    Route::get('event/show/{id}', [EventController::class, 'show']);
+    Route::post('event/update/{id}', [EventController::class, 'update']);
+    Route::delete('event/delete/{id}', [EventController::class, 'destroy']);
+    Route::post('logout', [AuthController::class, 'logout']);
 
 });
 
 Route::post('eventManager/register', [AuthController::class , 'eventManagerRegister']);
-
 Route::post('exposant/register', [AuthController::class , 'register']);
-
 Route::post('login', [AuthController::class , 'login']);
 

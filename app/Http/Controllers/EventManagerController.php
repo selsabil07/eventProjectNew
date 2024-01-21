@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class eventManagerController extends Controller
+class EventManagerController extends Controller
 {
     public function index(){
         $eventManagers = User::role('eventManager')->where('approved',1)->get();
         return response()->json($eventManagers);
     }
-    public function approvedEventManagers(){
+    public function approvedEventManagersCount(){
         $eventManagers = User::role('eventManager')->where('approved',1)->count();
         return response()->json($eventManagers);
     }
@@ -32,18 +32,14 @@ class eventManagerController extends Controller
         return  response()->json(User::destroy($id));
     }
 
-    public function update(string $id , Request $request ){
-        $user = User::find($id);
+    public function update( Request $request ){
+        $user = User::user();
         $user->update($request->all());
         return response()->json($user);
     }
 
-    // public function EventManagerCount() {
-    //     return response()->json(User::role('eventManager')->count());
-    // }
-
-    public function eventsOfUser($id) {
-        $events = Event::with('EventManager')->where('id');
+    public function eventsOfUser() {
+        $events = Event::with('EventManager')->auth()->user();
         return response()->json();
     }
 
@@ -51,11 +47,11 @@ class eventManagerController extends Controller
     {
         $EventManager = User::role('eventManager')->find($id);
         if($EventManager)
-    {
+        {
             $EventManager->approved = 1;
             $EventManager->save();
             return response()->json("the event manager approved");
-    }
+        }
     }
 
     public function rejectEventManager($id) 

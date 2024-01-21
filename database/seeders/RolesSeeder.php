@@ -22,10 +22,12 @@ class RolesSeeder extends Seeder
 
 
         Permission::create(['name' => 'showAllEventManagers']);
+        Permission::create(['name' => 'showUser']);
         Permission::create(['name' => 'readEventManager']);
         
         $adminRole->givePermissionTo([
             'showAllEventManagers',
+            'showUser'
         ]);
 
         $eventManagerRole->givePermissionTo([
