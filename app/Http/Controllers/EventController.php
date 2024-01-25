@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\NewNotification;
 use Illuminate\Support\Facades\Notification;
 
 class EventController extends Controller
@@ -16,38 +18,36 @@ class EventController extends Controller
         return response()->json(Event::all());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(Request $request)
-    {
-        $fields = $request->validate([
-            'eventTitle' => 'required|string',
-            'country' => 'required|string',
-            'sector' => 'required|string',
-            'photo' => '',
-            'tags' => 'required|string',
-            'summary' => 'required|string',
-            'description' => 'required|string',
-            'startingDate' => 'required|date',
-            'endingDate' => 'required|date',
-           //  'eventManagerId' => 'required|exists:event_managers,id', // Ensure the existence of the event manager
-        ]);
-    
-        // Create the event with the provided fields
-        $event = Event::create([
-            'eventTitle' => $fields['eventTitle'],
-            'country' => $fields['country'],
-            'sector' => $fields['sector'],
-            'photo' => $fields['photo'] ?? null,
-            'tags' => $fields['tags'],
-            'summary' => $fields['summary'],
-            'description' => $fields['description'],
-            'startingDate' => $fields['startingDate'],
-            'endingDate' => $fields['endingDate'],
-           //  'EventManager_id' => $fields['eventManagerId'], // Set the event manager ID
-        ]);
+{
+    $userId = Auth::user()->id;
+    $fields = $request->validate([
+        'eventTitle' => 'required|string',
+        'country' => 'required|string',
+        'sector' => 'required|string',
+        'photo' => '',
+        'tags' => 'required|string',
+        'summary' => 'required|string',
+        'description' => 'required|string',
+        'startingDate' => 'required|date',
+        'endingDate' => 'required|date',
+    ]);
 
+    // Create the event with the provided fields, including the user_id
+    $event = Event::create([
+        'user_id' => $userId, // Set the user_id to the current user's ID
+        'eventTitle' => $fields['eventTitle'],
+        'country' => $fields['country'],
+        'sector' => $fields['sector'],
+        'photo' => $fields['photo'] ?? null,
+        'tags' => $fields['tags'],
+        'summary' => $fields['summary'],
+        'description' => $fields['description'],
+        'startingDate' => $fields['startingDate'],
+        'endingDate' => $fields['endingDate'],
+    ]);
+
+    // Rest of your code
         $admin = User::role('admin')->get();
         $event_manager = auth()->user()->first_name;
         Notification::send($admin , new NewNotification($event->id , $event->eventTitle , $event_manager));

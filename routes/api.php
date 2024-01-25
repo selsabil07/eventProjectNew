@@ -32,13 +32,12 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
     Route::post('deactivate/{id}', [adminController::class, 'deactivate']);
     Route::post('update', [adminController::class, 'update']);
     Route::post('approveEventManager/{id}', [EventManagerController::class, 'approveEventManager']);
-    Route::delete('rejectEventManager/{$id}', [AuthController::class, 'rejectEventManager']);
-    Route::get('showUser', [AuthController::class, 'showUser']);
+    Route::delete('rejectEventManager/{id}', [AuthController::class, 'rejectEventManager']);
+    Route::get('showAdmin', [AuthController::class, 'showAdmin']);
     Route::get('eventsOfUser/{id}', [EventManagerController::class, 'eventsOfUser']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('notifCount', [AuthController::class, 'notifCount']);
     Route::get('notifs', [AuthController::class, 'notifs']);
-
 
 });
 
@@ -50,9 +49,14 @@ Route::group(['middleware' => ['auth:sanctum', 'role:eventManager']], function (
     Route::get('event/show/{id}', [EventController::class, 'show']);
     Route::post('event/update/{id}', [EventController::class, 'update']);
     Route::delete('event/delete/{id}', [EventController::class, 'destroy']);
-    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('logoutEventManager', [AuthController::class, 'logoutEventManager']);
+    Route::get('EventCount', [EventController::class, 'EventCount']);
 
-});
+
+});    
+Route::post('rest-password', [AuthController::class, 'reset'])->name('rest-password');
+    Route::post('forgot-password', [AuthController::class, 'forgot']);
+
 
 Route::post('eventManager/register', [AuthController::class , 'eventManagerRegister']);
 Route::post('exposant/register', [AuthController::class , 'register']);

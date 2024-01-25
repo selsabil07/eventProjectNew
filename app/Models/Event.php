@@ -14,7 +14,7 @@ class Event extends Model
         return $this->belongsTo(User::class);
     }
     protected $fillable = [
-        'EventManager_id',
+        'user_id',
         'eventTitle' ,
         'country',
         'sector',
