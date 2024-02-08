@@ -9,10 +9,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Event extends Model
 {
     use HasFactory;
+    
     public function EventManager()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function Exhibitor()
+    {
+        return $this->hasMany(User::class);
+    }
+
+
     protected $fillable = [
         'user_id',
         'eventTitle' ,

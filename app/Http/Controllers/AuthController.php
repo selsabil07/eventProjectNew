@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Event;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\ResetPassword;
@@ -45,7 +46,7 @@ class AuthController extends Controller
             'password' => bcrypt($fields['password']),
         ]);
     
-        $token = $user->createToken('userToken')->plainTextToken;
+        $token = $user->createToken('token')->plainTextToken;
 
         $user->assignRole('eventManager');
 
@@ -74,40 +75,129 @@ class AuthController extends Controller
     }
 
 
-    public function exposantRegister(Request $request)
-    {
-        $fields = $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'birthday' => 'required|date',
-            'phone' => 'required|string',
-            'email' => 'required|string|unique:users,email',
-            'organization' => 'required|string',
-            'password' => 'required|string|min:6',
-        ]);
+    // public function exhibitorRegister( $id , Request $request)
+    // {
+    //     $event_id = Event::find($id);
+    //     $fields = $request->validate([
+    //         'first_name' => 'required|string',
+    //         'last_name' => 'required|string',
+    //         'birthday' => 'required|date',
+    //         'phone' => 'required|string',
+    //         'email' => 'required|string|unique:users,email',
+    //         'organization' => 'required|string',
+    //         'password' => 'required|string|min:6',
+    //     ]);
     
-        $user = User::create([
-            'first_name' => $fields['first_name'],
-            'last_name' => $fields['last_name'],
-            'birthday' => $fields['birthday'],
-            'email' => $fields['email'],
-            'organization' => $fields['organization'],
-            'phone' => $fields['phone'],
-            'password' => bcrypt($fields['password']),
-        ]);
+    //     $user = User::create([
+    //         'event_id' => $event_id->id,
+    //         'first_name' => $fields['first_name'],
+    //         'last_name' => $fields['last_name'],
+    //         'birthday' => $fields['birthday'],
+    //         'email' => $fields['email'],
+    //         'organization' => $fields['organization'],
+    //         'phone' => $fields['phone'],
+    //         'password' => bcrypt($fields['password']),
+    //     ]);
     
-        $token = $user->createToken('userToken')->plainTextToken;
+    //     $token = $user->createToken('userToken')->plainTextToken;
 
-        $user->assignRole('exposant');
+    //     $user->assignRole('exhibitor');
 
-        $response = [
-            'user' => $user,
-            'token' => $token
-        ];
+    //     $response = [
+    //         'user' => $user,
+    //         'token' => $token
+    //     ];
 
-        return $response;
+    //     $eventManager = User::role('eventManager')->get();
+    //     $notification = new NewNotification($user->first_name, $user->last_name);
+
+    //     Notification::send($eventManager, $notification);
+    
+    //     return response()->json($response,200);
    
+    // }
+    public function exhibitorRegister($id, Request $request)
+{
+    $event = Event::find($id);
+
+    $user = User::create([
+        'event_id' => $event->id,
+        'first_name' => $request->input('first_name'),
+        'last_name' => $request->input('last_name'),
+        'birthday' => $request->input('birthday'),
+        'email' => $request->input('email'),
+        'organization' => $request->input('organization'),
+        'phone' => $request->input('phone'),
+        'password' => bcrypt($request->input('password')),
+    ]);
+
+    $token = $user->createToken('userToken')->plainTextToken;
+
+    $user->assignRole('exhibitor');
+
+    $response = [
+        'user' => $user,
+        'token' => $token
+    ];
+
+    $eventManagers = User::role('eventManager')->get();
+    $notification = new NewNotification($user->first_name, $user->last_name);
+
+    Notification::send($eventManagers, $notification);
+
+    return response()->json($response, 200);
+}
+
+
+    public function eventManagerNotifCount()
+    {
+        $notifs = auth()->check() ? auth()->user()->unreadNotifications->count() : 0;
+        return response()->json($notifs);
     }
+    public function eventManagerNotifs()
+    {
+        $notifs = auth()->check() ? auth()->user()->unreadNotifications->all():0;
+        return response()->json($notifs);
+    }
+
+
+    // public function createUserAndRegisterForEvent(Request $request, $eventId)
+    // {
+    //     // Validate the request data for creating a new user
+    //     $request->validate([
+    //         'first_name' => 'required|string',
+    //         'last_name' => 'required|string',
+    //         'birthday' => 'required|date',
+    //         'phone' => 'required|string',
+    //         'email' => 'required|string|unique:users,email',
+    //         'organization' => 'required|string',
+    //         'password' => 'required|string|min:6',
+    //     ]);
+    
+    //     // Create a new user
+    //     $user = User::create([
+    //         'first_name' => $request->input('first_name'),
+    //         'last_name' => $request->input('last_name'),
+    //         'birthday' => $request->input('birthday'),
+    //         'phone' => $request->input('phone'),
+    //         'email' => $request->input('email'),
+    //         'organization' => $request->input('organization'),
+    //         'password' => bcrypt($request->input('password')),
+    //         'event_id' => $eventId, // Set the event_id on the user
+    //     ]);
+    //  // Attach the user to the event
+
+    //     $token = $user->createToken('userToken')->plainTextToken;
+
+    //     $user->assignRole('exhibitor');
+
+    //     $response = [
+    //         'user' => $user,
+    //         'token' => $token
+    //     ];
+
+    //     return response()->json([$response,$eventId, 'message' => 'User created and registered for the event successfully.'], 201);
+    // }
 
     public function showUser(){
         $user = Auth::user(); 
@@ -142,17 +232,23 @@ class AuthController extends Controller
     ];
 
     return response()->json($response, 201);
-}
+    }
+
+    
     public function logout(Request $request) {
         auth()->user()->tokens()->delete();
 
         return response()->json(200);
     }
+
+
     public function logoutEventManager(Request $request) {
         auth()->user()->tokens()->delete();
 
         return response()->json(200);
     }
+
+
     public function forgot(Hasher $hasher, ForgotPasswordRequest $request)
     {
         $user = User::where('email', $request->input('email'))->first();

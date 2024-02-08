@@ -17,8 +17,10 @@ class RolesSeeder extends Seeder
         
 
         $adminRole = Role::create(['name' => 'admin']);
+
         $eventManagerRole = Role::create(['name' => 'eventManager']);
-        $exposantRole = Role::create(['name' => 'exposant']);
+        
+        $exposantRole = Role::create(['name' => 'exhibitor']);
 
 
         Permission::create(['name' => 'showAllEventManagers']);

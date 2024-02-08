@@ -3,9 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\EventManagerController;
 use App\Http\Controllers\adminController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\ExhibitorController;
+use App\Http\Controllers\EventManagerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +25,7 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
     Route::get('approvedEventManagers', [EventManagerController::class, 'index']);
     Route::get('requestEventManagers', [EventManagerController::class, 'requests']);
     Route::get('approvedEventManagersCount', [EventManagerController::class, 'approvedEventManagersCount']);
-    Route::get('requestCount', [EventManagerController::class, 'requestCount']);
+    Route::get('managerRequestCount', [EventManagerController::class, 'requestCount']);
     Route::get('events', [EventController::class, 'index']);
     Route::get('search/{$eventTitle}', [EventController::class, 'search']);
     Route::get('EventCount', [EventController::class, 'EventCount']);
@@ -38,27 +39,51 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('notifCount', [AuthController::class, 'notifCount']);
     Route::get('notifs', [AuthController::class, 'notifs']);
+    Route::get('allevents', [EventController::class, 'allevents']);
+
 
 });
+Route::post('search', [EventManagerController::class, 'search']);
 
 Route::group(['middleware' => ['auth:sanctum', 'role:eventManager']], function () {
+
     Route::get('showUser', [AuthController::class, 'showUser']);
-    Route::get('eventsOfUser', [EventManagerController::class, 'eventsOfUser']);
+    Route::get('eventManagerNotifs', [AuthController::class, 'eventManagerNotifs']);
+    Route::get('eventManagerNotifCount', [AuthController::class, 'eventManagerNotifCount']);
+
     Route::post('eventCreate', [EventController::class, 'create']);
+
     Route::post('eventManager/update', [EventManagerController::class, 'update']);
-    Route::get('event/show/{id}', [EventController::class, 'show']);
     Route::post('event/update/{id}', [EventController::class, 'update']);
     Route::delete('event/delete/{id}', [EventController::class, 'destroy']);
     Route::post('logoutEventManager', [AuthController::class, 'logoutEventManager']);
-    Route::get('EventCount', [EventController::class, 'EventCount']);
+    Route::get('EventCountOfTheCurrentUser', [EventController::class, 'EventCountOfTheCurrentUser']);
+    Route::get('events', [EventController::class, 'eventsOfCurrentUser']);
 
+    Route::get('approvedExibitors', [ExhibitorController::class, 'approvedExibitors']);
+    Route::get('approvedExibitorsCount', [ExhibitorController::class, 'approvedExibitorsCount']);
+    Route::get('requestCount', [ExhibitorController::class, 'requestCount']);
+    Route::delete('destroy/{id}', [ExhibitorController::class, 'destroy']);
+    Route::get('exhibitors/requests', [ExhibitorController::class, 'requests']);
+    Route::post('approveExhibitor/{id}', [ExhibitorController::class, 'approveExhibitor']);
 
-});    
-Route::post('rest-password', [AuthController::class, 'reset'])->name('rest-password');
-    Route::post('forgot-password', [AuthController::class, 'forgot']);
+});
 
+Route::group(['middleware' => ['auth:sanctum', 'role:exhibitor']],function () {
+    Route::post('update', [ExhibitorController::class, 'update']);
+
+});
+Route::get('event/{id}', [EventController::class, 'show']);
+Route::get('eventsOfUser/{id}', [EventController::class, 'eventsOfUser']);
+Route::get('allevents', [EventController::class, 'allevents']);
+
+Route::post('reset-password', [AuthController::class, 'reset'])->name('reset-password');
+Route::post('forgot-password', [AuthController::class, 'forgot']);
 
 Route::post('eventManager/register', [AuthController::class , 'eventManagerRegister']);
-Route::post('exposant/register', [AuthController::class , 'register']);
-Route::post('login', [AuthController::class , 'login']);
+Route::post('exhibitor/register', [AuthController::class , 'exhibitorRegister']);
 
+Route::post('/event/{id}/register', [AuthController::class, 'exhibitorRegister']);
+
+
+Route::post('login', [AuthController::class , 'login']);

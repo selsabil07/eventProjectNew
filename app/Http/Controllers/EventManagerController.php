@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EventManagerController extends Controller
 {
@@ -24,24 +25,90 @@ class EventManagerController extends Controller
         return response()->json($eventManagers);
     }
 
-    public function search($first_name){
-        return response()->json(User::where('first_name', 'like', '%'.$first_name.'%')->get());
+    public function search(Request $request)
+    {
+        $first_name = $request->input('first_name');
+        $last_name = $request->input('last_name');
+        $email = $request->input('email');
+        $sector = $request->input('sector');
+        $organization = $request->input('organization');
+        $phone = $request->input('phone');
+    
+        $user = User::query();
+    
+        if ($first_name) {
+            $user->where('first_name', 'like', '%' . $first_name . '%');
+        }
+        if ($last_name) {
+            $user->where('last_name', 'like', '%' . $last_name . '%');
+        }
+        if ($email) {
+            $user->where('email', 'like', '%' . $email . '%');
+        }
+        if ($organization) {
+            $user->where('organization', 'like', '%' . $organization . '%');
+        }
+        if ($phone) {
+            $user->where('phone', 'like', '%' . $phone . '%');
+        }
+    
+        $result = $user->get();
+        return response()->json($result);
     }
+    
 
     public function destroy($id){
         return  response()->json(User::destroy($id));
     }
 
-    public function update( Request $request ){
-        $user = User::user();
+    // public function update( Request $request , User $user ){
+    //     $request->validate([
+    //         'first_name' => 'string',
+    //         'last_name' => 'string',
+    //         'birthday' => 'date',
+    //         'phone' => 'string',
+    //         'email' => 'string|unique:users,email,' . $user->id,
+    //         'organization' => 'string',
+    //         'password' => 'confirmed|string|min:6'
+    //         // Add other validation rules for other fields
+    //     ]);
+
+    //     $user->update($request->all());
+
+    //     return response()->json($user);
+    // }
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+        // Validate the request data
+        $request->validate([
+            'first_name' => 'string',
+            'last_name' => 'string',
+            'birthday' => 'date',
+            'phone' => 'string',
+            'email' => 'string|email|unique:users,email,' . $user->id,
+            'organization' => 'string',
+            'password' => 'nullable|string|confirmed|min:6',
+            // Add other validation rules for other fields
+        ]);
+
+        // Update the user with the provided data
         $user->update($request->all());
-        return response()->json($user);
+
+        // Optionally, you may hash the password if it's provided in the request
+        if ($request->has('password')) {
+            $user->update(['password' => bcrypt($request->input('password'))]);
+        }
+
+        // Return a response
+        return response()->json($user, 200 , ['message' => 'updated']);
     }
 
-    public function eventsOfUser() {
-        $events = Event::with('EventManager')->auth()->user();
-        return response()->json();
-    }
+    // public function edit(User $user)
+    // {
+    //     return response()->json($user, 200);
+    // }
+
 
     public function approveEventManager($id) 
     {
