@@ -9,19 +9,35 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Event extends Model
 {
     use HasFactory;
-    
-    public function EventManager()
+
+    // public function eventManager()
+    // {
+    //     return $this->belongsTo(User::class)->whereHas('roles', function ($query) {
+    //         $query->where('name', 'eventManager');
+    //     });
+    // }
+    public function eventManager()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function Exhibitor()
+    // public function exhibitors()
+    // {
+    //     return $this->hasMany(User::class)->whereHas('roles', function ($query) {
+    //         $query->where('name', 'exhibitor');
+    //     });
+    // }
+
+    public function exhibitors()
     {
-        return $this->hasMany(User::class);
+        return $this->belongsToMany(User::class, 'event_user')->wherePivot('role', 'exhibitor');
     }
 
 
+
+
     protected $fillable = [
+        
         'user_id',
         'eventTitle' ,
         'country',

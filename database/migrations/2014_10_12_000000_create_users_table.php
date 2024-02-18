@@ -23,8 +23,14 @@ return new class extends Migration
             $table->boolean('approved')->default(0)->nullable();
             $table->boolean('status')->default(1)->nullable();//0 = disactivated 1= activated
             $table->string('profile_photo')->default('profile_photo.jpg')->nullable();
+
+                        
+            // $table->unsignedBigInteger('event_id')->nullable();
+            // $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
+
             $table->rememberToken();
             $table->timestamps();
+
         });
     }
 

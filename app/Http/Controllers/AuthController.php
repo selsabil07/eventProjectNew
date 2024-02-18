@@ -33,7 +33,7 @@ class AuthController extends Controller
             'phone' => 'required|string',
             'email' => 'required|string|unique:users,email',
             'organization' => 'required|string',
-            'password' => 'required|string|min:6',
+            'password' => 'confirmed|required|string|min:6',
         ]);
     
         $user = User::create([
@@ -75,7 +75,7 @@ class AuthController extends Controller
     }
 
 
-    // public function exhibitorRegister( $id , Request $request)
+    // public function exhibitorRegiste( $id , Request $request)
     // {
     //     $event_id = Event::find($id);
     //     $fields = $request->validate([
@@ -116,12 +116,12 @@ class AuthController extends Controller
     //     return response()->json($response,200);
    
     // }
-    public function exhibitorRegister($id, Request $request)
+    public function exhibitorRegister(string $id , Request $request)
 {
     $event = Event::find($id);
-
+    $id = $event->id;
     $user = User::create([
-        'event_id' => $event->id,
+        
         'first_name' => $request->input('first_name'),
         'last_name' => $request->input('last_name'),
         'birthday' => $request->input('birthday'),
@@ -130,6 +130,8 @@ class AuthController extends Controller
         'phone' => $request->input('phone'),
         'password' => bcrypt($request->input('password')),
     ]);
+    $role = 'exhibitor';
+    $user->event()->attach($id, ['role' => $role]);
 
     $token = $user->createToken('userToken')->plainTextToken;
 
@@ -199,10 +201,16 @@ class AuthController extends Controller
     //     return response()->json([$response,$eventId, 'message' => 'User created and registered for the event successfully.'], 201);
     // }
 
-    public function showUser(){
+    public function showEventManager(){
         $user = Auth::user(); 
         return response()->json($user); 
     }
+
+    public function showExhibitor(){
+        $user = Auth::user(); 
+        return response()->json($user); 
+    }
+
     public function showAdmin(){
         $admin = Auth::user(); 
         return response()->json($admin); 
@@ -243,6 +251,12 @@ class AuthController extends Controller
 
 
     public function logoutEventManager(Request $request) {
+        auth()->user()->tokens()->delete();
+
+        return response()->json(200);
+    }
+
+    public function logoutExhibitor(Request $request) {
         auth()->user()->tokens()->delete();
 
         return response()->json(200);

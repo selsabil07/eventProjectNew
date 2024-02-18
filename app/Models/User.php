@@ -15,7 +15,24 @@ class User extends Authenticatable
 
     public function events()
     {
-        return $this->hasMany(Event::class);
+        if ($this->hasRole('eventManager')) {
+            return $this->hasMany(Event::class, 'user_id');
+        }
+
+    }
+
+    // public function event()
+    // {
+    //     if ($this->hasRole('exhibitor')) {
+    //         return $this->hasMany(Event::class);
+    //     }
+
+    // }
+
+    
+    public function event()
+    {
+        return $this->belongsToMany(Event::class)->wherePivot('role', 'exhibitor');
     }
 
 
@@ -25,7 +42,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        
+        'event_id',
         'first_name',
         'last_name',
         'birthday',
