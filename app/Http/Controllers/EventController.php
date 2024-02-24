@@ -56,36 +56,133 @@ class EventController extends Controller
 
     //     return response()->json($event, 200);
     // }
-    public function create(Request $request)
-    {
-        try {
-            $userId = Auth::user()->id;
+    // public function create(Request $request)
+    // {
+    //     try {
+    //         $userId = Auth::user()->id;
     
-            // Extract fields directly from the request
-            $fields = $request->all();
+    //         // Extract fields directly from the request
+    //         $fields = $request->all();
     
-            // Create the event with the provided fields, including the user_id
-            $event = Event::create([
-                'user_id' => $userId,
-                'eventTitle' => $fields['eventTitle'] ?? null,
-                'country' => $fields['country'] ?? null,
-                'sector' => $fields['sector'] ?? null,
-                'photo' => $fields['photo'] ?? null,
-                'tags' => $fields['tags'] ?? null,
-                'summary' => $fields['summary'] ?? null,
-                'description' => $fields['description'] ?? null,
-                'startingDate' => $fields['startingDate'] ?? null,
-                'endingDate' => $fields['endingDate'] ?? null,
-            ]);
+    //         // Create the event with the provided fields, including the user_id
+    //         $event = Event::create([
+    //             'user_id' => $userId,
+    //             'eventTitle' => $fields['eventTitle'] ?? null,
+    //             'country' => $fields['country'] ?? null,
+    //             'sector' => $fields['sector'] ?? null,
+    //             // 'photo' => $fields['photo'] ?? null,
+    //             'tags' => $fields['tags'] ?? null,
+    //             'summary' => $fields['summary'] ?? null,
+    //             'description' => $fields['description'] ?? null,
+    //             'startingDate' => $fields['startingDate'] ?? null,
+    //             'endingDate' => $fields['endingDate'] ?? null,
+    //             'photo' => $fields->file('image')->store('images', 'public'),
+    //         ]);
     
-            // Additional logic, if needed
+    //         // Additional logic, if needed
     
-            return response()->json($event, 200);
-        } catch (\Exception $e) {
-            // Handle exceptions or errors
-            return response()->json(['error' => $e->getMessage()], 500);
+    //         return response()->json($event, 200);
+    //     } catch (\Exception $e) {
+    //         // Handle exceptions or errors
+    //         return response()->json(['error' => $e->getMessage()], 500);
+    //     }
+    // }
+
+//     public function create(Request $request)
+// {
+//     try {
+//         $userId = Auth::user()->id;
+
+//         // Ensure the form has the enctype="multipart/form-data" attribute
+//         // Example Blade view form:
+//         // <form action="{{ route('create.event') }}" method="POST" enctype="multipart/form-data">
+//         // ...
+
+//         // Check if the 'image' file exists in the request
+//         if ($request->hasFile('image')) {
+//             $photoPath = $request->getScemeAndHttpHost() . '/storage/' . time() . '.' . $request->image->extension();
+//             $request->image->move(public_path('/storage/'), $request->image);
+//             // Now you can use $photoPath as needed
+//         }
+
+//         // Extract fields directly from the request
+//         $fields = $request->all();
+//         dd($request->all());
+
+//         // Create the event with the provided fields, including the user_id
+//         $event = Event::create([
+//             'user_id' => $userId,
+//             'eventTitle' => $fields['eventTitle'] ?? null,
+//             'country' => $fields['country'] ?? null,
+//             'sector' => $fields['sector'] ?? null,
+//             'tags' => $fields['tags'] ?? null,
+//             'summary' => $fields['summary'] ?? null,
+//             'description' => $fields['description'] ?? null,
+//             'startingDate' => $fields['startingDate'] ?? null,
+//             'endingDate' => $fields['endingDate'] ?? null,
+//             'photo' => $photoPath ?? null, // Use the $photoPath if it exists
+//         ]);
+
+//         // Additional logic, if needed
+
+//         return response()->json($event, 200);
+//     } catch (\Exception $e) {
+//         // Handle exceptions or errors
+//         return response()->json(['error' => $e->getMessage()], 500);
+//     }
+// }
+public function create(Request $request)
+{
+    try {
+        $userId = Auth::user()->id;
+
+        // Ensure the form has the enctype="multipart/form-data" attribute
+        // Example Blade view form:
+        // <form action="{{ route('create.event') }}" method="POST" enctype="multipart/form-data">
+        // ...
+
+        // Check if the 'image' file exists in the request
+        if ( $request->hasFile('photo')) {
+            // $photoPath = $request->getSchemeAndHttpHost() . '/storage/' . time() . '.' . $request->image->extension();
+            // $request->image->move(public_path('storage'), time() . '.' . $request->image->extension());
+
+            $fileName = time().$request->file('photo')->getClientOriginalName();
+            $path = $request->file('photo')->storeAs('image' , $fileName , 'public');
+            $fields["photo"] = '/storage/' .$path ;
+            // Now you can use $photoPath as needed
+        } else {
+            // Handle the case where no image is uploaded
+            $photoPath = null;
         }
+
+        // Extract fields directly from the request
+        $fields = $request->all();
+        // dd($fields);
+
+        // Create the event with the provided fields, including the user_id
+        $event = Event::create([
+            'user_id' => $userId,
+            'eventTitle' => $fields['eventTitle'] ?? null,
+            'country' => $fields['country'] ?? null,
+            'sector' => $fields['sector'] ?? null,
+            'tags' => $fields['tags'] ?? null,
+            'summary' => $fields['summary'] ?? null,
+            'description' => $fields['description'] ?? null,
+            'startingDate' => $fields['startingDate'] ?? null,
+            'endingDate' => $fields['endingDate'] ?? null,
+            'photo' => $photoPath, // Use the $photoPath
+        ]);
+
+        // Additional logic, if needed
+
+        return response()->json($event, 200);
+    } catch (\Exception $e) {
+        // Handle exceptions or errors
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
+
     
     public function notifCount()
     {

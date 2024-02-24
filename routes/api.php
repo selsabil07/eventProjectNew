@@ -33,7 +33,7 @@ Route::group(['middleware' => ['auth:sanctum', 'role:admin']], function () {
     Route::post('deactivate/{id}', [adminController::class, 'deactivate']);
     Route::post('update', [adminController::class, 'update']);
     Route::post('approveEventManager/{id}', [EventManagerController::class, 'approveEventManager']);
-    Route::delete('rejectEventManager/{id}', [AuthController::class, 'rejectEventManager']);
+    Route::delete('rejectEventManager/{id}', [EventManagerController::class, 'rejectEventManager']);
     Route::get('showAdmin', [AuthController::class, 'showAdmin']);
     Route::get('eventsOfUser/{id}', [EventManagerController::class, 'eventsOfUser']);
     Route::post('logout', [AuthController::class, 'logout']);
@@ -65,14 +65,14 @@ Route::group(['middleware' => ['auth:sanctum', 'role:eventManager']], function (
     Route::get('requestCount', [ExhibitorController::class, 'requestCount']);
     Route::delete('destroy/{id}', [ExhibitorController::class, 'destroy']);
 
-
     Route::post('approveExhibitor/{id}', [ExhibitorController::class, 'approveExhibitor']);
+    Route::post('rejectExhibitor/{id}', [ExhibitorController::class, 'rejectExhibitor']);
 
 });
-    Route::get('exhibitor/requests/{id}', [ExhibitorController::class, 'exhibitorRquests']);
-
-
-
+    Route::get('exhibitor/requests/{id}', [ExhibitorController::class, 'exhibitorRequests']);
+    Route::get('exhibitors/{id}', [ExhibitorController::class, 'Exhibitors']);
+    Route::get('allExhibitors', [ExhibitorController::class, 'allExhibitors']);
+    Route::get('allRequests', [ExhibitorController::class, 'allRequests']);
 
 Route::group(['middleware' => ['auth:sanctum', 'role:exhibitor']],function () {
     Route::post('update', [ExhibitorController::class, 'update']);

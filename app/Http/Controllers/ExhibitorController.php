@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class ExhibitorController extends Controller
@@ -32,14 +33,15 @@ class ExhibitorController extends Controller
         if ($lastEvent) {
             // Count the number of exhibitors in the last event
             $numberOfExhibitors = $lastEvent->exhibitors()->where('approved', 1)->count();
+
             $eventTitle = $lastEvent->eventTitle;
 
-            $all = [
-                $numberOfExhibitors,
-                $eventTitle,
-            ];
+            // $all = [
+            //     $numberOfExhibitors,
+            //     $eventTitle,
+            // ];
             // Now, $numberOfExhibitors contains the count of exhibitors in the last event
-            return response()->json($all);
+            return response()->json($numberOfExhibitors);
         } else {
             // Handle the case where there are no events
             echo "No events found.";
@@ -108,7 +110,7 @@ public function requestCount(){
 
 //     return response()->json($unapprovedExhibitors);
 // }
-// public function exhibitorRquests(String $id)
+// public function exhibitorRquest(String $id)
 // {
 
 //     // Retrieve events for the authenticated user
@@ -120,32 +122,97 @@ public function requestCount(){
 //     return response()->json( $exhibitors );
 // }
 
-public function exhibitorRquests(string $id)
+public function exhibitorRequests(string $id)
+{
+
+    $event = Event::find($id);
+
+    // Retrieve exhibitors for an event
+    try {
+    
+        $exhibitors = $event->exhibitors->where('approved', 0);
+
+        return response()->json($exhibitors->toArray());
+
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+    // $all = [$event , $exhibitors ];
+
+    // return response()->json($exhibitors);
+}
+public function Exhibitors(string $id)
 {
     // Retrieve the event by its ID
     $event = Event::find($id);
 
-    // Attach exhibitors
-    // $event->exhibitors()->attach([$id, $user_id, ['role' => $role]]);
-    
     // Retrieve exhibitors for an event
-    $exhibitors = $event->exhibitors;
-    
-    // $all = [$event , $exhibitors ];
+    $exhibitors = $event->exhibitors->where('approved', 1);
 
     return response()->json($exhibitors);
+
+    
+}
+
+public function allExhibitors()
+{
+    // Retrieve the event by its ID
+    $events = Event::get();
+    $exhibitors = Event::with('exhibitors:id,first_name,last_name,organization,approved:1')->get();
+
+    // foreach ($events as $event) {
+
+    //     $exhibitors = $event->exhibitors->where('approved', 1);
+
+         return response()->json($exhibitors);
+
+}
+
+// public function allRequests()
+// {
+//     // Retrieve the event by its ID
+//     $events = Event::get();
+//     $exhibitorRequests = Event::with('exhibitors:id,first_name,approved:0')->get();
+
+//         return response()->json($exhibitorRequests);
+
+// }
+public function allRequests()
+{
+    // Retrieve the event by its ID
+    $events = Event::get();
+    
+    // Retrieve exhibitors with approved = 0
+    $exhibitorRequests = Event::with(['exhibitors' => function ($query) {
+        $query->where('approved', 0)->select('first_name', 'last_name' , 'organization' , 'email' ,'approved');
+    }])->get();
+
+    return response()->json($exhibitorRequests);
 }
 
     public function approveExhibitor($id) 
     {
-        $Exhibitor = User::role('exhibitor')->find($id);
-        if($Exhibitor)
+        $exhibitor = User::role('exhibitor')->find($id);
+        if($exhibitor)
         {
-            $Exhibitor->approved = 1;
-            $Exhibitor->save();
+            $exhibitor->approved = 1;
+            $exhibitor->save();
             return response()->json("the Exhibitor approved");
         }
     }
+
+    public function rejectExhibitor($id) 
+    {
+        $exhibitor = User::role('exhibitor')->find($id);
+        if($exhibitor)
+    {
+            $exhibitor->approved = 0;
+            $exhibitor->save();
+            return response()->json (User::destroy($id));
+    }
+    }
+
 
     public function search(Request $request)
     {
@@ -199,8 +266,4 @@ public function exhibitorRquests(string $id)
 
         return response()->json($user);
     }
-
-
-
-
 }
