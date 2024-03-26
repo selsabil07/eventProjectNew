@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Tag;
 use App\Models\User;
+use App\Models\Sponsor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -21,16 +23,19 @@ class Event extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // public function exhibitors()
-    // {
-    //     return $this->hasMany(User::class)->whereHas('roles', function ($query) {
-    //         $query->where('name', 'exhibitor');
-    //     });
-    // }
+    public function sponsors()
+    {
+        return $this->hasMany(Sponsor::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
 
     public function exhibitors()
     {
-        return $this->belongsToMany(User::class, 'event_user')->wherePivot('role', 'exhibitor');
+        return $this->belongsToMany(User::class, 'event_user', 'event_id', 'user_id')->wherePivot('role', 'exhibitor');
     }
 
 
@@ -42,11 +47,12 @@ class Event extends Model
         'eventTitle' ,
         'country',
         'sector',
+        'city',
+        'address',
         'photo',
-        'tags',
+        // 'tags',
         'summary',
         'description',
-        'approved',
         'startingDate',
         'endingDate',
     ];

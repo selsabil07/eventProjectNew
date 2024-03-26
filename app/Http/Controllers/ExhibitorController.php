@@ -24,54 +24,44 @@ class ExhibitorController extends Controller
     //     return response()->json($exhibitors);
     // }
 
-    public function numberOfExhibitors(){
+    public function numberOfExhibitors()
+    {
+        // Retrieve the authenticated user
         $user = Auth::user();
+    if (!$user) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
 
-        // Retrieve the last event
-        $lastEvent = Event::latest()->first();
+    // Retrieve the count of exhibitors with approved status equal to 1
+    $exhibitorCount = $user->events()->withCount(['exhibitors' => function ($query) {
+        $query->where('approved', 1);
+    }])->get()->sum('exhibitors_count');
 
-        if ($lastEvent) {
-            // Count the number of exhibitors in the last event
-            $numberOfExhibitors = $lastEvent->exhibitors()->where('approved', 1)->count();
-
-            $eventTitle = $lastEvent->eventTitle;
-
-            // $all = [
-            //     $numberOfExhibitors,
-            //     $eventTitle,
-            // ];
-            // Now, $numberOfExhibitors contains the count of exhibitors in the last event
-            return response()->json($numberOfExhibitors);
-        } else {
-            // Handle the case where there are no events
-            echo "No events found.";
-        }
+    return response()->json( $exhibitorCount);
+}
 
     
-        return response()->json(error);
-    }
-   
 
-public function requestCount(){
+
+public function requestCount()
+{
+    // Retrieve the authenticated user
     $user = Auth::user();
-
-    // Retrieve the last event
-    $lastEvent = Event::latest()->first();
-
-    if ($lastEvent) {
-        // Count the number of exhibitors in the last event
-        $numberOfExhibitors = $lastEvent->exhibitors()->where('approved', 0)->count();
-
-        // Now, $numberOfExhibitors contains the count of exhibitors in the last event
-        return response()->json($numberOfExhibitors);
-    } else {
-        // Handle the case where there are no events
-        echo "No events found.";
-    }
-
-
-    return response()->json(error);
+if (!$user) {
+    return response()->json(['error' => 'Unauthorized'], 401);
 }
+
+// Retrieve the count of exhibitors with approved status equal to 1
+$exhibitorCount = $user->events()->withCount(['exhibitors' => function ($query) {
+    $query->where('approved', 0);
+}])->get()->sum('exhibitors_count');
+
+return response()->json( $exhibitorCount);
+}
+
+
+
+
 // public function requests()
 // {
 //     $user = Auth::user();
@@ -138,10 +128,8 @@ public function exhibitorRequests(string $id)
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
-    // $all = [$event , $exhibitors ];
-
-    // return response()->json($exhibitors);
 }
+
 public function Exhibitors(string $id)
 {
     // Retrieve the event by its ID
@@ -158,38 +146,105 @@ public function Exhibitors(string $id)
 public function allExhibitors()
 {
     // Retrieve the event by its ID
-    $events = Event::get();
-    $exhibitors = Event::with('exhibitors:id,first_name,last_name,organization,approved:1')->get();
-
-    // foreach ($events as $event) {
-
-    //     $exhibitors = $event->exhibitors->where('approved', 1);
-
-         return response()->json($exhibitors);
+    {
+        // Check if the user is authenticated
+        if(auth()->check()) {
+            // Retrieve the current authenticated user
+            $currentUser = auth()->user();
+    
+            // Retrieve events where the current user is the owner
+            $events = Event::where('user_id', $currentUser->id)->get();
+    
+            // Retrieve exhibitor requests for the current user's events
+            $exhibitorRequests = Event::with(['exhibitors' => function ($query) {
+                $query->where('approved', 1)
+                    ->select('user_id', 'first_name','phone', 'last_name', 'profile_photo' ,'organization', 'email', 'approved', 'event_id');
+            }])->where('user_id', $currentUser->id)
+                ->get();
+    
+            return response()->json(
+                $exhibitorRequests,
+            );
+        } else {
+            // Handle case where user is not authenticated
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+    }
 
 }
+// public function myevent()
+// {
+//     // Retrieve the event by its ID
+//     $user = User::auth();
+
+//     $exhibitors = User::with('events:id,eventTitle')->get();
+
+//          return response()->json($exhibitors);
+
+// }
+// public function myevent()
+// {
+//     // Assuming User::auth() is a custom method to get the authenticated user
+//     $user = Auth::user();
+
+//     // Assuming you have a relationship named 'events' in your User model
+//     // $exhibitors = $user->load('events:id,eventTitle');
+//     $event = $user->with('events:id,eventTitle')->get();
+
+//     return response()->json($event);
+// }
+public function myevent()
+{
+    // Retrieve the authenticated user
+    $user = Auth::user()->load('events');
+
+        return response()->json($user);
+    
+}
+
 
 // public function allRequests()
 // {
 //     // Retrieve the event by its ID
 //     $events = Event::get();
-//     $exhibitorRequests = Event::with('exhibitors:id,first_name,approved:0')->get();
+//     // $eevents = User::auth()->events();
+    
+//     // Retrieve exhibitors with approved = 0
+//     $exhibitorRequests = Event::with(['exhibitors' => function ($query) {
+//         $query->where('approved', 0)->select('user_id','first_name', 'last_name' , 'organization' , 'email' ,'approved');
+//     }])->get();
 
-//         return response()->json($exhibitorRequests);
-
+//     return response()->json($exhibitorRequests);
 // }
 public function allRequests()
 {
-    // Retrieve the event by its ID
-    $events = Event::get();
-    
-    // Retrieve exhibitors with approved = 0
-    $exhibitorRequests = Event::with(['exhibitors' => function ($query) {
-        $query->where('approved', 0)->select('first_name', 'last_name' , 'organization' , 'email' ,'approved');
-    }])->get();
+    // Check if the user is authenticated
+    if(auth()->check()) {
+        // Retrieve the current authenticated user
+        $currentUser = auth()->user();
 
-    return response()->json($exhibitorRequests);
+        // Retrieve events where the current user is the owner
+        $events = Event::where('user_id', $currentUser->id)->get();
+
+        // Retrieve exhibitor requests for the current user's events
+        $exhibitorRequests = Event::with(['exhibitors' => function ($query) {
+            $query->where('approved', 0)
+                ->select('user_id', 'first_name','phone', 'last_name', 'organization', 'email', 'approved', 'event_id');
+        }])->where('user_id', $currentUser->id)
+            ->get();
+
+        return response()->json(
+            // 'events' => $events,
+            $exhibitorRequests,
+        );
+    } else {
+        // Handle case where user is not authenticated
+        return response()->json(['error' => 'User not authenticated'], 401);
+    }
 }
+
+
+
 
     public function approveExhibitor($id) 
     {
@@ -205,12 +260,16 @@ public function allRequests()
     public function rejectExhibitor($id) 
     {
         $exhibitor = User::role('exhibitor')->find($id);
-        if($exhibitor)
-    {
-            $exhibitor->approved = 0;
-            $exhibitor->save();
-            return response()->json (User::destroy($id));
+
+      if ($exhibitor) {
+        $exhibitor->approved = 0;
+        // $exhibitor->save();
+        $exhibitor->delete();
+        return response()->json($exhibitor);
     }
+
+    return response()->json(['message' => 'Exhibitor not found'], 404);
+        
     }
 
 
@@ -250,20 +309,25 @@ public function allRequests()
         return  response()->json(User::destroy($id));
     }
 
-    public function update( Request $request ){
+    public function update(Request $request, User $user)
+    {
         $request->validate([
-            'first_name' => 'string',
-            'last_name' => 'string',
-            'birthday' => 'date',
-            'phone' => 'string',
-            'email' => 'string|unique:users,email',
-            'organization' => 'string',
-            'password' => 'confirmed|string|min:6'
+            'password' => 'nullable|string|min:6|confirmed',
             // Add other validation rules for other fields
         ]);
-
-        $user->update($request->all());
-
+    
+        // Check if the request contains a password and update it
+        if ($request->has('password')) {
+            $user->update([
+                'password' => bcrypt($request->password),
+                // Add other fields you want to update
+            ]);
+        } else {
+            // If no password is provided, update other fields
+            $user->update($request->except('password'));
+        }
+    
         return response()->json($user);
     }
+    
 }

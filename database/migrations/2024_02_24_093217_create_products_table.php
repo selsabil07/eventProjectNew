@@ -11,22 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
+        Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // Foreign key
+            $table->unsignedBigInteger('user_id'); 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('eventTitle');
-            $table->string('country');
-            $table->string('city');
-            $table->string('address');
-            $table->string('sector');
+            $table->string('name');
+            $table->string('description');
+            $table->string('price');
+            $table->string('quantity');
             $table->string('photo')->nullable();
-            $table->string('summary');
-            $table->string('description'); 
-            $table->date('startingDate');
-            $table->date('endingDate');
             $table->timestamps();
-
         });
     }
 
@@ -35,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('events');
+        Schema::dropIfExists('products');
     }
 };

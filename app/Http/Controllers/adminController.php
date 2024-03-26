@@ -12,12 +12,33 @@ class adminController extends Controller
         return response()->json($admin);
     }
 
-    public function update(Request $request) {
-        $user = auth()->user(); // Use auth() to get the authenticated user
-        $user->update($request->all());
+    public function updateinfo(Request $request) {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'first_name' => 'nullable|string',
+            'last_name' => 'nullable|string',
+            'birthday' => 'nullable|date',
+            'phone' => 'nullable|string',
+            'email' => 'nullable|string|unique:users,email',
+            'organization' => 'nullable|string',
+            'profile_photo' => 'nullable',
+            'password' => 'confirmed|required|string|min:6',
+        ]);
     
+        // Get the authenticated user
+        $user = auth()->user();
+    
+        // Update only the provided fields
+        $user->fill($validatedData);
+    
+        // Save the changes to the user
+        $user->save();
+    
+        // Return the updated user information
         return response()->json($user);
     }
+    
+    
 
     public function adminInfo($id){
         $admin = User::role('admin')->where($id)->get();

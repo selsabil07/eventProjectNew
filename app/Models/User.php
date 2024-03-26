@@ -3,11 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use App\Models\Product;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
@@ -17,6 +18,14 @@ class User extends Authenticatable
     {
         if ($this->hasRole('eventManager')) {
             return $this->hasMany(Event::class, 'user_id');
+        }
+
+    }
+
+    public function products()
+    {
+        if ($this->hasRole('exhibitor')) {
+            return $this->hasMany(Product::class, 'user_id');
         }
 
     }
@@ -32,7 +41,7 @@ class User extends Authenticatable
     
     public function event()
     {
-        return $this->belongsToMany(Event::class)->wherePivot('role', 'exhibitor');
+        return $this->belongsToMany(Event::class ,'event_user', 'user_id', 'event_id')->wherePivot('role', 'exhibitor');
     }
 
 
@@ -43,6 +52,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'event_id',
+        'user_name',
         'first_name',
         'last_name',
         'birthday',

@@ -13,16 +13,16 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('user_name')->unique()->nullable();
             $table->string('first_name');
             $table->string('last_name');
-            $table->date('birthday')->nullable();
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->string('organization')->nullable(); 
             $table->string('password');
             $table->boolean('approved')->default(0)->nullable();
             $table->boolean('status')->default(1)->nullable();//0 = disactivated 1= activated
-            $table->string('profile_photo')->default('profile_photo.jpg')->nullable();
+            $table->string('profile_photo')->nullable();
 
                         
             // $table->unsignedBigInteger('event_id')->nullable();

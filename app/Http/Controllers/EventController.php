@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\NewNotification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 
 class EventController extends Controller
@@ -131,56 +133,149 @@ class EventController extends Controller
 //         return response()->json(['error' => $e->getMessage()], 500);
 //     }
 // }
+// public function create(Request $request)
+// {
+//     try {
+//         $userId = Auth::user()->id;
+
+//         $imagePath =null;
+//         // Handle image upload
+//         if ($request->hasFile('photo')&& $request->file('photo')->isValid()) {
+//             $imagePath = Storage::disk('public')->put('storage', $request->file('photo'));
+//             $fields['photo'] = $imagePath;
+//         }
+
+//         // Extract fields directly from the request
+//         $fields = $request->all();
+//         // dd($fields);
+
+//         // Create the event with the provided fields, including the user_id
+//         $event = Event::create([
+//             'user_id' => $userId,
+//             'eventTitle' => $fields['eventTitle'] ?? null,
+//             'country' => $fields['country'] ?? null,
+//             'sector' => $fields['sector'] ?? null,
+//             'tags' => $fields['tags'] ?? null,
+//             'summary' => $fields['summary'] ?? null,
+//             'description' => $fields['description'] ?? null,
+//             'startingDate' => $fields['startingDate'] ?? null,
+//             'endingDate' => $fields['endingDate'] ?? null,
+//             'photo' => $imagePath, // Use the $photoPath
+//         ]);
+
+//         // Additional logic, if needed
+
+//         return response()->json($event, 200);
+//     } catch (\Exception $e) {
+//         // Handle exceptions or errors
+//         return response()->json(['error' => $e->getMessage()], 500);
+//     }
+// }
+
+// Assuming Tag model exists in App\Models namespace
+// public function create(Request $request)
+// {
+//     try {
+//         $userId = Auth::user()->id;
+
+//         $imagePath = null;
+//         // Handle image upload
+//         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+//             $imagePath = Storage::disk('public')->put('storage', $request->file('photo'));
+//         }
+
+//         // Extract fields directly from the request
+//         $fields = $request->all();
+
+//         // Initialize $tags outside of the if block
+//         $tags = [];
+
+//         // Create the event with the provided fields, including the user_id and photo
+//         $event = Event::create([
+//             'user_id' => $userId,
+//             'eventTitle' => $fields['eventTitle'] ?? null,
+//             'country' => $fields['country'] ?? null,
+//             'sector' => $fields['sector'] ?? null,
+//             'summary' => $fields['summary'] ?? null,
+//             'description' => $fields['description'] ?? null,
+//             'startingDate' => $fields['startingDate'] ?? null,
+//             'endingDate' => $fields['endingDate'] ?? null,
+//             'tags' => $fields['tags'] ?? null,
+//             'photo' => $imagePath,
+//         ]);
+
+//         // Sync tags with the event
+//         if (isset($fields['tags']) && is_array($fields['tags'])) {
+//             foreach ($fields['tags'] as $tagName) {
+//                 $tag = Tag::firstOrCreate(['name' => $tagName]);
+//                 $tags[] = $tag->id;
+//             }
+
+//             $event->tags()->attach($tags); // Assuming you have a tags relationship defined in your Event model
+//         }
+
+//         return response()->json(['event' => $event, 'tags' => $tags], 200);
+//     } catch (\Exception $e) {
+//         // Handle exceptions or errors
+//         return response()->json(['error' => $e->getMessage()], 500);
+//     }
+// }
+
 public function create(Request $request)
 {
     try {
         $userId = Auth::user()->id;
 
-        // Ensure the form has the enctype="multipart/form-data" attribute
-        // Example Blade view form:
-        // <form action="{{ route('create.event') }}" method="POST" enctype="multipart/form-data">
-        // ...
-
-        // Check if the 'image' file exists in the request
-        if ( $request->hasFile('photo')) {
-            // $photoPath = $request->getSchemeAndHttpHost() . '/storage/' . time() . '.' . $request->image->extension();
-            // $request->image->move(public_path('storage'), time() . '.' . $request->image->extension());
-
-            $fileName = time().$request->file('photo')->getClientOriginalName();
-            $path = $request->file('photo')->storeAs('image' , $fileName , 'public');
-            $fields["photo"] = '/storage/' .$path ;
-            // Now you can use $photoPath as needed
-        } else {
-            // Handle the case where no image is uploaded
-            $photoPath = null;
+        $imagePath = null;
+        // Handle image upload
+        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            $imagePath = Storage::disk('public')->put('event', $request->file('photo'));
         }
 
         // Extract fields directly from the request
         $fields = $request->all();
-        // dd($fields);
 
-        // Create the event with the provided fields, including the user_id
-        $event = Event::create([
+        // Initialize $tags outside of the if block
+        $tags = [];
+
+        // Create the event with the provided fields, excluding tags
+        $eventData = [
             'user_id' => $userId,
             'eventTitle' => $fields['eventTitle'] ?? null,
             'country' => $fields['country'] ?? null,
             'sector' => $fields['sector'] ?? null,
-            'tags' => $fields['tags'] ?? null,
             'summary' => $fields['summary'] ?? null,
             'description' => $fields['description'] ?? null,
             'startingDate' => $fields['startingDate'] ?? null,
             'endingDate' => $fields['endingDate'] ?? null,
-            'photo' => $photoPath, // Use the $photoPath
-        ]);
+            'photo' => $imagePath,
+            // 'tags' => $fields['tags'] ?? [], 
+        ];
 
-        // Additional logic, if needed
+        // Create the event
+        $event = Event::create($eventData);
 
-        return response()->json($event, 200);
+        // Sync tags with the event
+        if (isset($fields['tags']) && is_array($fields['tags'])) {
+            foreach ($fields['tags'] as $tagName) {
+                $tag = Tag::firstOrCreate(['name' => $tagName]);
+                $tags[] = $tag->id;
+            }
+
+            $event->tags()->attach($tags); // Assuming you have a tags relationship defined in your Event model
+        }
+
+        return response()->json(['event' => $event, 'tags' => $tags], 200);
+
     } catch (\Exception $e) {
         // Handle exceptions or errors
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
+
+
+
+
 
 
     
@@ -279,10 +374,10 @@ public function create(Request $request)
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
+    // public function edit(string $id)
+    // {
         
-    }
+    // }
 
     function eventsOfUser($id){
         // Example: Retrieve events for a user with ID 1
@@ -296,26 +391,66 @@ public function create(Request $request)
     /**
      * Update the specified resource in storage.
      */
-    public function update($id, Request $request)
-    {
-        $event = Event::find($id);
+    public function update(string $id, Request $request) {
+        try {
+    //         // Find the event by ID
+            $event = Event::findOrFail($id);
+            $userId = Auth::user()->id;
     
-        $validatedData = $request->validate([
-            'eventTitle' => 'string',
-            'country' => 'string',
-            'sector' => 'string',
-            'photo' => '', // Add your validation rules for 'photo'
-            'tags' => 'string',
-            'summary' => 'string',
-            'description' => 'string',
-            'startingDate' => 'date',
-            'endingDate' => 'date',
-        ]);
+            $imagePath = $event->photo; // Get the existing photo path
     
-        $event->update($validatedData);
+    //         // Handle image upload if a new photo is provided
+            if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+                // Delete the existing photo if it exists
+                if ($imagePath && Storage::disk('public')->exists($imagePath)) {
+                    Storage::disk('public')->delete($imagePath);
+                    // Storage::disk('public')->delete($imagePath); 
+                }
+                // Upload the new photo
+                $imagePath = Storage::disk('public')->put('event', $request->file('photo'));
+            }
     
-        return response()->json($event);
-    }
+    //         // Extract fields directly from the request
+            $fields = $request->all();
+    
+    //         // Initialize $tags outside of the if block
+            $tags = [];
+    
+    //         // Update the event with the provided fields
+            $event->update([
+                'eventTitle' => $fields['eventTitle'] ?? $event->eventTitle,
+                'country' => $fields['country'] ?? $event->country,
+                'sector' => $fields['sector'] ?? $event->sector,
+                'summary' => $fields['summary'] ?? $event->summary,
+                'description' => $fields['description'] ?? $event->description,
+                'startingDate' => $fields['startingDate'] ?? $event->startingDate,
+                'endingDate' => $fields['endingDate'] ?? $event->endingDate,
+                'photo' => $imagePath,
+            ]);
+    
+    //         // Sync tags with the event
+            if (isset($fields['tags']) && is_array($fields['tags'])) {
+                foreach ($fields['tags'] as $tagName) {
+                    $tag = Tag::firstOrCreate(['name' => $tagName]);
+                    $tags[] = $tag->id;
+                }
+    
+                $event->tags()->sync($tags); // Use sync() instead of attach() to sync the tags
+            }
+    
+            return response()->json([
+                'event' => $event,
+                'photo_url' => $imagePath ,
+                // 'tags' => $tags
+            ], 200);
+                
+        } catch (\Exception $e) {
+            // Handle exceptions or errors
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+     }
+    
+    
     
 
     /**

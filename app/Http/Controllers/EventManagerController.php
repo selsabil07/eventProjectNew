@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -77,32 +78,61 @@ class EventManagerController extends Controller
 
     //     return response()->json($user);
     // }
+
+    // public function update(Request $request)
+    // {
+    //     $user = Auth::user();
+    //     // Validate the request data
+    //     $request->validate([
+    //         'first_name' => 'nullable|string',
+    //         'last_name' => 'nullable|string',
+    //         'birthday' => 'nullable|date',
+    //         'phone' => 'nullable|string',
+    //         'organization' => 'nullable|string',
+    //         'password' => 'nullable|string|confirmed|min:6',
+    //         // Add other validation rules for other fields
+    //     ]);
+
+    //     // Update the user with the provided data
+    //     $user->update($request->all());
+
+    //     // Optionally, you may hash the password if it's provided in the request
+    //     if ($request->has('password')) {
+    //         $user->update(['password' => bcrypt($request->input('password'))]);
+    //     }
+
+    //     // Return a response
+    //     return response()->json($user, 200 , ['message' => 'updated']);
+    // }
     public function update(Request $request)
-    {
-        $user = Auth::user();
-        // Validate the request data
-        $request->validate([
-            'first_name' => 'string',
-            'last_name' => 'string',
-            'birthday' => 'date',
-            'phone' => 'string',
-            'email' => 'string|email|unique:users,email,' . $user->id,
-            'organization' => 'string',
-            'password' => 'nullable|string|confirmed|min:6',
-            // Add other validation rules for other fields
-        ]);
+{
+    $user = Auth::user();
 
-        // Update the user with the provided data
-        $user->update($request->all());
+    // Validate the request data
+    $request->validate([
+        'first_name' => 'nullable|string',
+        'last_name' => 'nullable|string',
+        'birthday' => 'nullable|date',
+        'phone' => 'nullable|string',
+        'organization' => 'nullable|string',
+        'password' => 'nullable|string|confirmed|min:6',
+        // Add other validation rules for other fields
+    ]);
 
-        // Optionally, you may hash the password if it's provided in the request
-        if ($request->has('password')) {
-            $user->update(['password' => bcrypt($request->input('password'))]);
-        }
+    // Update the user with the provided data
+    $dataToUpdate = $request->only(['first_name', 'last_name', 'birthday', 'phone', 'organization']);
 
-        // Return a response
-        return response()->json($user, 200 , ['message' => 'updated']);
+    // Optionally, you may hash the password if it's provided in the request
+    if ($request->has('password')) {
+        $dataToUpdate['password'] = bcrypt($request->input('password'));
     }
+
+    $user->update($dataToUpdate);
+
+    // Return a response
+    return response()->json($user, 200, ['message' => 'user details updated']);
+}
+
 
     // public function edit(User $user)
     // {
@@ -152,5 +182,16 @@ class EventManagerController extends Controller
             return response()->json ("deactivate");
     }
     }
+
+    public function sector() {
+        // Group events by sector and count occurrences of each sector
+        $sectorCounts = Event::groupBy('sector')->select('sector', \DB::raw('count(*) as count'))->get();
+    
+        // Transform the result into an associative array
+        $sectorCountsArray = $sectorCounts->pluck('count', 'sector')->toArray();
+    
+        return response()->json($sectorCountsArray);
+    }
+    
 
 }
