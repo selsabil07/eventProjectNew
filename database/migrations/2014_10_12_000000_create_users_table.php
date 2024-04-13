@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('organization')->nullable(); 
             $table->string('password');
             $table->boolean('approved')->default(0)->nullable();
-            $table->boolean('status')->default(1)->nullable();//0 = disactivated 1= activated
+            // $table->boolean('status')->default(1)->nullable();//0 = disactivated 1= activated
             $table->string('profile_photo')->nullable();
 
                         

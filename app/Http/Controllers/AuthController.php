@@ -30,8 +30,8 @@ class AuthController extends Controller
         $fields = $request->validate([
             'first_name' => 'required|string',
             'last_name' => 'required|string',
-            'birthday' => 'required|date',
-            'phone' => 'required|string',
+            'user_name' => 'required|string|unique:users,user_name',
+            'phone' => 'required|string|min:10 |max:10',
             'email' => 'required|string|unique:users,email',
             'organization' => 'required|string',
             'profile_photo' => 'nullable',
@@ -47,7 +47,7 @@ class AuthController extends Controller
         $user = User::create([
             'first_name' => $fields['first_name'],
             'last_name' => $fields['last_name'],
-            'birthday' => $fields['birthday'],
+            'user_name' => $fields['user_name'],
             'email' => $fields['email'],
             'organization' => $fields['organization'],
             'phone' => $fields['phone'],
@@ -147,7 +147,7 @@ public function exhibitorRegister(Request $request)
     $fields = $request->validate([
         'first_name' => 'required|string',
         'last_name' => 'required|string',
-        'birthday' => 'required|date',
+        'user_name' => 'required|string',
         'phone' => 'required|string',
         'email' => 'required|string|unique:users,email',
         'organization' => 'required|string',
@@ -165,7 +165,7 @@ public function exhibitorRegister(Request $request)
         $user = User::create([
             'first_name' => $fields['first_name'],
             'last_name' => $fields['last_name'],
-            'birthday' => $fields['birthday'],
+            'user_name' => $fields['user_name'],
             'email' => $fields['email'],
             'organization' => $fields['organization'],
             'phone' => $fields['phone'],
@@ -173,7 +173,7 @@ public function exhibitorRegister(Request $request)
             'password' => bcrypt($fields['password']),
         ]);
 
-    $role = 'exhibitor';
+    // $role = 'exhibitor';
     // $user->event()->attach($id, ['role' => $role]);
 
     $token = $user->createToken('userToken')->plainTextToken;
@@ -185,10 +185,10 @@ public function exhibitorRegister(Request $request)
         'token' => $token
     ];
 
-    // $eventManagers = User::role('eventManager')->get();
-    // $notification = new NewNotification($user->first_name, $user->last_name);
+    $eventManagers = User::role('eventManager')->get();
+    $notification = new NewNotification($user->first_name, $user->last_name);
 
-    // Notification::send($eventManagers, $notification);
+    Notification::send($eventManagers, $notification);
 
     return response()->json($response, 200);
 }
@@ -250,7 +250,36 @@ public function join(string $id , Request $request)
         return response()->json($admin); 
     }
 
-    public function login(Request $request) {
+
+    public function loginExhibitor(Request $request)
+     {
+    $fields = $request->validate([
+        'email' => 'required|string',
+        'password' => 'required|string'
+    ]);
+
+    // Check email
+    $user = User::where('email', $fields['email'])->first();
+
+    // Check password
+    if(!$user || !Hash::check($fields['password'], $user->password)) {
+        return response([
+            'message' => 'Bad creds'
+        ], 401);
+    }
+    
+    $token = $user->createToken('myapptoken')->plainTextToken;
+
+    $response = [
+        'user' => $user,
+        'token' => $token
+    ];
+
+    return response()->json($response, 201);
+    }
+
+    public function login(Request $request)
+     {
     $fields = $request->validate([
         'email' => 'required|string',
         'password' => 'required|string'

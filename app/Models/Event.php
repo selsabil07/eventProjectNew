@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\Product;
 use App\Models\Sponsor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,9 +36,14 @@ class Event extends Model
 
     public function exhibitors()
     {
-        return $this->belongsToMany(User::class, 'event_user', 'event_id', 'user_id')->wherePivot('role', 'exhibitor');
+        return $this->belongsToMany(User::class, 'event_user', 'event_id', 'user_id')
+        ->as('exhibitors');
     }
-
+    
+    public function products()
+    {
+        return $this->hasMany(Product::class );
+    }
 
 
 

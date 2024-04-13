@@ -41,7 +41,7 @@ class User extends Authenticatable
     
     public function event()
     {
-        return $this->belongsToMany(Event::class ,'event_user', 'user_id', 'event_id')->wherePivot('role', 'exhibitor');
+        return $this->belongsToMany(Event::class ,'event_user', 'user_id', 'event_id');
     }
 
 

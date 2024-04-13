@@ -223,7 +223,7 @@ class EventController extends Controller
 
 public function create(Request $request)
 {
-    try {
+    
         $userId = Auth::user()->id;
 
         $imagePath = null;
@@ -237,12 +237,26 @@ public function create(Request $request)
 
         // Initialize $tags outside of the if block
         $tags = [];
-
+        $fields = $request->validate([
+            'eventTitle' => 'required|string',
+            'country' => 'required|string',
+            'city' => 'sometimes|string', // Use 'sometimes' if the field is not always required
+            'address' => 'sometimes|string',
+            'sector' => 'required|string',
+            'summary' => 'required|string',
+            'description' => 'required|string',
+            'startingDate' => 'required|date',
+            'endingDate' => 'required|date|after_or_equal:startingDate',
+            'photo' => 'nullable|image', // Add appropriate validation rules for file upload
+        ]);
+        
         // Create the event with the provided fields, excluding tags
         $eventData = [
             'user_id' => $userId,
             'eventTitle' => $fields['eventTitle'] ?? null,
             'country' => $fields['country'] ?? null,
+            'city' => $fields['city'] ?? null,
+            'address' => $fields['address'] ?? null,
             'sector' => $fields['sector'] ?? null,
             'summary' => $fields['summary'] ?? null,
             'description' => $fields['description'] ?? null,
@@ -265,13 +279,9 @@ public function create(Request $request)
             $event->tags()->attach($tags); // Assuming you have a tags relationship defined in your Event model
         }
 
-        return response()->json(['event' => $event, 'tags' => $tags], 200);
+        return response()->json( $event, 200);
 
-    } catch (\Exception $e) {
-        // Handle exceptions or errors
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-}
+    } 
 
 
 

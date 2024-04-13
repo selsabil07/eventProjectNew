@@ -51,10 +51,10 @@ if (!$user) {
     return response()->json(['error' => 'Unauthorized'], 401);
 }
 
-// Retrieve the count of exhibitors with approved status equal to 1
+// Retrieve the count of exhibitors with approved status equal to 0
 $exhibitorCount = $user->events()->withCount(['exhibitors' => function ($query) {
     $query->where('approved', 0);
-}])->get()->sum('exhibitors_count');
+}])->get()->count();
 
 return response()->json( $exhibitorCount);
 }
@@ -163,7 +163,7 @@ public function allExhibitors()
                 ->get();
     
             return response()->json(
-                $exhibitorRequests,
+                $exhibitorRequests, 'success'
             );
         } else {
             // Handle case where user is not authenticated
@@ -202,75 +202,17 @@ public function myevent()
     
 }
 
-
-// public function allRequests()
-// {
-//     // Retrieve the event by its ID
-//     $events = Event::get();
-//     // $eevents = User::auth()->events();
-    
-//     // Retrieve exhibitors with approved = 0
-//     $exhibitorRequests = Event::with(['exhibitors' => function ($query) {
-//         $query->where('approved', 0)->select('user_id','first_name', 'last_name' , 'organization' , 'email' ,'approved');
-//     }])->get();
-
-//     return response()->json($exhibitorRequests);
-// }
-public function allRequests()
+public function allRequests(Request $request )
 {
-    // Check if the user is authenticated
-    if(auth()->check()) {
-        // Retrieve the current authenticated user
-        $currentUser = auth()->user();
+    // Retrieve the authenticated user
+    $user = Auth::user()->id;
 
-        // Retrieve events where the current user is the owner
-        $events = Event::where('user_id', $currentUser->id)->get();
+    $exhibitors = Event::where('user_id' , $user)->with('exhibitors:id,first_name,last_name,email,phone,organization,user_name,profile_photo,approved:0')->get();
 
-        // Retrieve exhibitor requests for the current user's events
-        $exhibitorRequests = Event::with(['exhibitors' => function ($query) {
-            $query->where('approved', 0)
-                ->select('user_id', 'first_name','phone', 'last_name', 'organization', 'email', 'approved', 'event_id');
-        }])->where('user_id', $currentUser->id)
-            ->get();
+    return response()->json($exhibitors);
 
-        return response()->json(
-            // 'events' => $events,
-            $exhibitorRequests,
-        );
-    } else {
-        // Handle case where user is not authenticated
-        return response()->json(['error' => 'User not authenticated'], 401);
-    }
 }
 
-
-
-
-    public function approveExhibitor($id) 
-    {
-        $exhibitor = User::role('exhibitor')->find($id);
-        if($exhibitor)
-        {
-            $exhibitor->approved = 1;
-            $exhibitor->save();
-            return response()->json("the Exhibitor approved");
-        }
-    }
-
-    public function rejectExhibitor($id) 
-    {
-        $exhibitor = User::role('exhibitor')->find($id);
-
-      if ($exhibitor) {
-        $exhibitor->approved = 0;
-        // $exhibitor->save();
-        $exhibitor->delete();
-        return response()->json($exhibitor);
-    }
-
-    return response()->json(['message' => 'Exhibitor not found'], 404);
-        
-    }
 
 
     public function search(Request $request)
@@ -329,5 +271,31 @@ public function allRequests()
     
         return response()->json($user);
     }
-    
+
+
+    public function approveExhibitor($id) 
+    {
+        $exhibitor = User::role('exhibitor')->find($id);
+        if($exhibitor)
+        {
+            $exhibitor->approved = 1;
+            $exhibitor->save();
+            return response()->json("the event manager approved");
+        }
+    }
+
+    public function rejectexhibitor($id) 
+    {
+        $EventManager = User::role('eventManager')->find($id);
+        if($EventManager)
+    {
+            $EventManager->approved = 0;
+            $EventManager->save();
+            return response()->json (User::destroy($id));
+    }
+    }
+     public function show($id){
+        $exhibitor = User::find($id);
+        return response()->json($exhibitor, 200);
+     }
 }

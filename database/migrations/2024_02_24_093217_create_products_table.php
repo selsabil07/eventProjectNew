@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('event_id'); 
+            $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
+
             $table->unsignedBigInteger('user_id'); 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            
             $table->string('name');
             $table->string('description');
             $table->string('price');

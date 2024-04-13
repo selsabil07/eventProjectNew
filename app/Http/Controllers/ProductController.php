@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Event;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,50 +14,75 @@ class productController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index($id)
     {
-        $allProducts = Product::all();
-        return response()->json($allProducts);
+        $event = Event::find($id);
+        
+        // Retrieve all users associated with the event
+        $users = $event->exhibitors;
+        
+        // Retrieve all products associated with the users
+        $products = collect();
+    
+        foreach ($users as $user) {
+            $products = $products->merge($user->products);
+        }
+        
+        return response()->json($users, 200);
+    }
+    
+    public function products($id){
+        $user = User::find($id);
+        $products = $user->products;
+        return response()->json($products, 200);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
-    {
-        try {
-            $user_id = Auth::user()->id;
+    public function create(string $id, Request $request)
+{
+    try {
+        // Find the event by ID
+        $event = Event::findOrFail($id);
 
-            $fields = $request->validate([
-                'name' => 'required|string',
-                'description' => 'required|string',
-                'price' => 'required|string',
-                'quantity' => 'string',
-                'photo' => 'nullable|image', // Add validation for image files
-            ]);
+        // Assuming you have authentication and each exhibitor has a unique ID
+        $user = Auth::user(); // Get the ID of the logged-in exhibitor
 
-             $imagePath =null;
-                // Handle image upload
-                if ($request->hasFile('photo')&& $request->file('photo')->isValid()) {
-                    $imagePath = Storage::disk('public')->put('storage', $request->file('photo'));
-                    $fields['photo'] = $imagePath;
-                }
-        
-             $product = Product::create([
-                'user_id' => $user_id,
-                'name' => $fields['name'],
-                'description' => $fields['description'],
-                'price' => $fields['price'],
-                'quantity' => $fields['quantity'],
-                'photo' => $imagePath,
-            ]);
-        
-            return response()->json($product, 200);
-        } catch (\Exception $e) {
-            // Handle exceptions or errors
-            return response()->json(['error' => $e->getMessage()], 500);
+        $fields = $request->validate([
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|string',
+            'quantity' => 'string',
+            'photo' => 'nullable|image', // Add validation for image files
+        ]);
+
+        $imagePath = null;
+
+        // Handle image upload
+        if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            $imagePath = Storage::disk('public')->put('storage', $request->file('photo'));
+            $fields['photo'] = $imagePath;
         }
+
+        // Create the product with the correct event and exhibitor IDs
+        $product = Product::create([
+            'event_id' => $event->id,
+            'user_id' => $user->id,
+            'name' => $fields['name'],
+            'description' => $fields['description'],
+            'price' => $fields['price'],
+            'quantity' => $fields['quantity'],
+            'photo' => $imagePath,
+        ]);
+
+        return response()->json($product, 200);
+    } catch (\Exception $e) {
+        // Handle exceptions or errors
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -152,4 +179,12 @@ class productController extends Controller
     {
         //
     }
+
+    // public function showAllProducts($id ){
+    //     $event = Event::find($id);
+
+    //     $products = $event->products;
+
+    //     return response()->json($products, 200);
+    // }
 }

@@ -86,7 +86,7 @@ Route::group(['middleware' => ['auth:sanctum', 'role:exhibitor']],function () {
     Route::post('update', [ExhibitorController::class, 'update']);
     Route::post('logoutExhibitor', [AuthController::class, 'logoutExhibitor']);
     Route::get('showExhibitor', [AuthController::class, 'showExhibitor']);
-    Route::post('createProduct', [ProductController::class , 'create']);
+    Route::post('createProduct/{id}', [ProductController::class , 'create']);
     Route::get('showUserProducts', [ProductController::class, 'showUserProducts']);
     Route::get('show/{id}', [ProductController::class, 'show']);
     Route::get('myevent', [ExhibitorController::class, 'myevent']);
@@ -111,10 +111,14 @@ Route::post('exhibitorRegister', [AuthController::class, 'exhibitorRegister']);
 
 Route::post('login', [AuthController::class , 'login']);
 
-Route::post('login', [AuthController::class , 'login']);
+Route::post('loginExhibitor', [AuthController::class , 'loginExhibitor']);
 
-Route::get('allP', [ProductController::class , 'index']);
+Route::get('allProducts/{id}', [ProductController::class , 'index']);
 
-Route::get('showUser/{id}', [AuthController::class , 'showUser']);
+Route::get('products/{id}', [ProductController::class , 'products']);
+
+Route::get('showUser', [AuthController::class , 'showUser']);
+
+Route::get('exhibitor/{id}', [ExhibitorController::class , 'show']);
 
 Route::post('subscribe', [VisitorController::class , 'create']);
