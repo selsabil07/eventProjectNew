@@ -26,7 +26,7 @@ class Event extends Model
 
     public function sponsors()
     {
-        return $this->hasMany(Sponsor::class);
+        return $this->belongsToMany(Sponsor::class);
     }
 
     public function tags()

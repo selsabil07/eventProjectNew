@@ -21,32 +21,36 @@ class SponsorController extends Controller
      * Show the form for creating a new resource.
      */
     public function create(Request $request, string $id)
-    {
-        $event = Event::find($id);
-    
-        if (!$event) {
-            return response()->json(['error' => 'Event not found'], 404);
-        }
-    
-        $imagePath = null;
-    
-        // Handle image upload
-        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
-            $imagePath = Storage::disk('public')->put('SponsorLogo', $request->file('logo'));
-        }
-    
-        $fields = $request->validate([
-            'name' => 'required|string',
-        ]);
-    
-        $sponsor = Sponsor::create([
-            'event_id' => $event->id,
-            'name' => $fields['name'],
-            'logo' => $imagePath,
-        ]);
-    
-        return response()->json($sponsor, 200);
+{
+    $event = Event::find($id);
+
+    if (!$event) {
+        return response()->json(['error' => 'Event not found'], 404);
     }
+
+    $imagePath = null;
+
+    // Handle image upload
+    if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+        $imagePath = Storage::disk('public')->put('SponsorLogo', $request->file('logo'));
+    }
+
+    $fields = $request->validate([
+        'name' => 'required|string',
+    ]);
+
+    // Create the sponsor
+    $sponsor = Sponsor::create([
+        'name' => $fields['name'],
+        'logo' => $imagePath,
+    ]);
+
+    // Attach the sponsor to the event using the pivot table
+    $event->sponsors()->attach($sponsor->id);
+
+    return response()->json($sponsor, 200);
+}
+
     
 
     /**

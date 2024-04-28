@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Tag;
 use App\Models\User;
 use App\Models\Event;
+use App\Models\Visitor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\NewNotification;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\EventNotification;
 use Illuminate\Support\Facades\Notification;
 
 class EventController extends Controller
@@ -223,7 +225,6 @@ class EventController extends Controller
 
 public function create(Request $request)
 {
-    
         $userId = Auth::user()->id;
 
         $imagePath = null;
@@ -231,12 +232,8 @@ public function create(Request $request)
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $imagePath = Storage::disk('public')->put('event', $request->file('photo'));
         }
-
-        // Extract fields directly from the request
         $fields = $request->all();
-
-        // Initialize $tags outside of the if block
-        $tags = [];
+        // $tags = [];
         $fields = $request->validate([
             'eventTitle' => 'required|string',
             'country' => 'required|string',
@@ -251,7 +248,7 @@ public function create(Request $request)
         ]);
         
         // Create the event with the provided fields, excluding tags
-        $eventData = [
+        $event = [
             'user_id' => $userId,
             'eventTitle' => $fields['eventTitle'] ?? null,
             'country' => $fields['country'] ?? null,
@@ -266,18 +263,27 @@ public function create(Request $request)
             // 'tags' => $fields['tags'] ?? [], 
         ];
 
-        // Create the event
-        $event = Event::create($eventData);
+        $event = Event::create($event);
 
-        // Sync tags with the event
-        if (isset($fields['tags']) && is_array($fields['tags'])) {
-            foreach ($fields['tags'] as $tagName) {
-                $tag = Tag::firstOrCreate(['name' => $tagName]);
-                $tags[] = $tag->id;
+    //     $emails = Visitor::pluck('email');
+
+    //     // Send notification to all subscribers
+    //    $emails->notify(new EventNotification($fields['eventTitle'], $fields['sector'], $fields['startingDate'], $fields['endingDate'], $fields['summary']));
+                    
+            $emails = Visitor::pluck('email');
+
+            // Loop through each email and send the notification
+            foreach ($emails as $email) {
+                $visitor = Visitor::where('email', $email)->first(); // Retrieve the visitor by email
+                $visitor->notify(new EventNotification(
+                    $fields['eventTitle'],
+                    $fields['sector'],
+                    $fields['startingDate'],
+                    $fields['endingDate'],
+                    $fields['summary']
+                ));
             }
 
-            $event->tags()->attach($tags); // Assuming you have a tags relationship defined in your Event model
-        }
 
         return response()->json( $event, 200);
 

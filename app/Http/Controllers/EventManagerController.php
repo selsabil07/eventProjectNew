@@ -112,7 +112,6 @@ class EventManagerController extends Controller
     $request->validate([
         'first_name' => 'nullable|string',
         'last_name' => 'nullable|string',
-        'birthday' => 'nullable|date',
         'phone' => 'nullable|string',
         'organization' => 'nullable|string',
         'password' => 'nullable|string|confirmed|min:6',
@@ -120,20 +119,35 @@ class EventManagerController extends Controller
     ]);
 
     // Update the user with the provided data
-    $dataToUpdate = $request->only(['first_name', 'last_name', 'birthday', 'phone', 'organization']);
-
-    // Optionally, you may hash the password if it's provided in the request
-    if ($request->has('password')) {
-        $dataToUpdate['password'] = bcrypt($request->input('password'));
+    if ($request->filled('first_name')) {
+        $user->first_name = $request->input('first_name');
     }
 
-    $user->update($dataToUpdate);
+    if ($request->filled('last_name')) {
+        $user->last_name = $request->input('last_name');
+    }
+
+    if ($request->filled('phone')) {
+        $user->phone = $request->input('phone');
+    }
+
+    if ($request->filled('organization')) {
+        $user->organization = $request->input('organization');
+    }
+
+    // Optionally, you may hash the password if it's provided in the request
+    if ($request->filled('password')) {
+        $user->password = bcrypt($request->input('password'));
+    }
+
+    // Save the user model
+    $user->save();
 
     // Return a response
-    return response()->json($user, 200, ['message' => 'user details updated']);
+    return response()->json($user, 200, ['message' => 'User details updated successfully']);
 }
 
-
+    
     // public function edit(User $user)
     // {
     //     return response()->json($user, 200);

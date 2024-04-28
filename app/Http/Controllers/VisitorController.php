@@ -71,8 +71,9 @@ class VisitorController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
+    // public function emails()
+    // {
+    //     $emails = Visitor::get()->email;
+    //     return($emails);
+    // }
 }

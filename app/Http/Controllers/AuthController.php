@@ -141,8 +141,6 @@ class AuthController extends Controller
 
 public function exhibitorRegister(Request $request)
 {
-    // $event = Event::find($id);
-    // $id = $event->id;
 
     $fields = $request->validate([
         'first_name' => 'required|string',

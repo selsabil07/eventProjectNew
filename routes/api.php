@@ -76,8 +76,9 @@ Route::group(['middleware' => ['auth:sanctum', 'role:eventManager']], function (
     Route::get('exhibitor/requests/{id}', [ExhibitorController::class, 'exhibitorRequests']);
     Route::get('exhibitors/{id}', [ExhibitorController::class, 'Exhibitors']);
     Route::get('allExhibitors', [ExhibitorController::class, 'allExhibitors']);
+    Route::post('event/{id}/sponsor', [SponsorController::class, 'create']);
 });  
-  Route::post('event/{id}/create', [SponsorController::class, 'create']);
+  
 
     
    
